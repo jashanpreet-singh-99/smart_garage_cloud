@@ -1,0 +1,15 @@
+{
+  "Door": 0,
+  "DoorStop": 1,
+  "Lights": {
+    "LightExt": 0,
+    "LightFL": 1,
+    "LightFR": 1,
+    "LightML": 1,
+    "LightMM": 0,
+    "LightMR": 0,
+    "LightRL": 0,
+    "LightRM": 0,
+    "LightRR": 0
+  }
+}
