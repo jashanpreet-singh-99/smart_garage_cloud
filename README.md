@@ -30,7 +30,7 @@ End point : /Lights
 
 Additional Headers
 * Light : \<Position of the Light\> i.e Light_F_L  
-* Value : 0 (Off) | 1 (On) 
+* Value : 0 (Off) | 1 (On)
 
 ![Alt text](misc/Endpoint_2.png?raw=true "Endpoint 2")
 
@@ -61,13 +61,17 @@ Request : PUT
 End point : /DoorStop
 
 Additional Headers
-* Status : LOCK | UNLOCK 
+* Status : LOCK | UNLOCK
 
 ![Alt text](misc/Endpoint_5.png?raw=true "Endpoint 5")
+
+## Deployment
+
+* Use the ase_test.service file to deploy it as a systemd service in linux environment.
 
 ## To Do
 - [ ] Login DB  
 - [ ] JWT tokens (Security)  
-- [ ] Test case 
+- [ ] Test case
 - [ ] Translation  
 - [ ] Modify return values  

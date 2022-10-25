@@ -1,0 +1,10 @@
+[Unit]
+Description=ASE  test Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/ASE/go_server/server
+
+[Install]
+WantedBy=multi-user.target
