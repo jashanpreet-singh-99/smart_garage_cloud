@@ -195,6 +195,13 @@ func openCloseDoor(w http.ResponseWriter, r *http.Request) {
   writeDB()
 }
 
+func statDoor(w http.ResponseWriter, r *http.Request) {
+  val := data.DoorStop
+  fmt.Println("Door Data requested : ", val)
+  w.Header().Set("Content-type", "application/json")
+  json.NewEncoder(w).Encode(val)
+}
+
 // Status = LOCK | UNLOCK
 func stopDoor(w http.ResponseWriter, r *http.Request) {
   fmt.Println("Locking Door Position.")
@@ -236,6 +243,7 @@ func handleRequests() {
   router.HandleFunc("/Door", getDoorStatus).Methods("GET")
   router.HandleFunc("/Door", openCloseDoor).Methods("PUT")
   router.HandleFunc("/DoorStop", stopDoor).Methods("PUT")
+  router.HandleFunc("/DoorStat", statDoor).Methods("GET")
 
   http.HandleFunc("/", defaultConnection)
   log.Fatal(http.ListenAndServe(":80", router))
