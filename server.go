@@ -16,24 +16,19 @@ var data DB
 
 type DB struct {
   Door int     `json:Door`
-  DoorStop int `json:DoorStop`
+  Co   int     `json:Co`
   Lights Lights `json:Lights`
 }
 
 type Lights struct {
   LightExt int `json:LightExt`
-  LightFL  int `json:LightFL`
-  LightFR  int `json:LightFR`
-  LightML  int `json:LightML`
-  LightMM  int `json:LightMM`
-  LightMR  int `json:LightMR`
-  LightRL  int `json:LightRL`
-  LightRM  int `json:LightRM`
-  LightRR  int `json:LightRR`
+  LightL  int `json:LightL`
+  LightM  int `json:LightM`
+  LightR  int `json:LightR`
 }
 
 func defaultConnection(w http.ResponseWriter, r *http.Request) {
-  fmt.Fprint(w, "Welcome to the default Page!")
+  fmt.Fprint(w, "Welcome to the Smart Garage Welcome Page!")
   fmt.Println("Default page requested.")
 }
 
@@ -41,9 +36,9 @@ func getLightStatus(w http.ResponseWriter, r *http.Request) {
   fmt.Println("Lights Data requested.")
   LightLabel := r.Header.Get("Light")
   fmt.Println("Lights : " + LightLabel)
-  val := GetLightSpecificValue(LightLabel)
+  //val := GetLightSpecificValue(LightLabel)
   w.Header().Set("Content-type", "application/json")
-  json.NewEncoder(w).Encode(val)
+  json.NewEncoder(w).Encode(data.Lights)
 }
 
 // Lights value based on label
@@ -51,22 +46,12 @@ func GetLightSpecificValue(label string) int {
   switch label {
   case "Light_Ext":
     return data.Lights.LightExt
-  case "Light_F_L":
-    return data.Lights.LightFL
-  case "Light_F_R":
-    return data.Lights.LightFR
-  case "Light_M_L":
-    return data.Lights.LightML
-  case "Light_M_M":
-    return data.Lights.LightMM
-  case "Light_M_R":
-    return data.Lights.LightMR
-  case "Light_R_L":
-    return data.Lights.LightRL
-  case "Light_R_M":
-    return data.Lights.LightRM
-  case "Light_R_R":
-    return data.Lights.LightRR
+  case "Light_L":
+    return data.Lights.LightL
+  case "Light_M":
+    return data.Lights.LightM
+  case "Light_R":
+    return data.Lights.LightR
   default:
     return -1
   }
@@ -81,51 +66,21 @@ func SetLightSpecificValue(label string, value int) bool{
       return true
     }
     return false
-  case "Light_F_L":
-    data.Lights.LightFL = value
-    if (data.Lights.LightFL == value) {
+  case "Light_L":
+    data.Lights.LightL = value
+    if (data.Lights.LightL == value) {
       return true
     }
     return false
-  case "Light_F_R":
-    data.Lights.LightFR = value
-    if (data.Lights.LightFR == value) {
+  case "Light_M":
+    data.Lights.LightM = value
+    if (data.Lights.LightM == value) {
       return true
     }
     return false
-  case "Light_M_L":
-    data.Lights.LightML = value
-    if (data.Lights.LightML == value) {
-      return true
-    }
-    return false
-  case "Light_M_M":
-    data.Lights.LightMM = value
-    if (data.Lights.LightMM == value) {
-      return true
-    }
-    return false
-  case "Light_M_R":
-    data.Lights.LightMR = value
-    if (data.Lights.LightMR == value) {
-      return true
-    }
-    return false
-  case "Light_R_L":
-    data.Lights.LightRL = value
-    if (data.Lights.LightRL == value) {
-      return true
-    }
-    return false
-  case "Light_R_M":
-    data.Lights.LightRM = value
-    if (data.Lights.LightRM == value) {
-      return true
-    }
-    return false
-  case "Light_R_R":
-    data.Lights.LightRR = value
-    if (data.Lights.LightRR == value) {
+  case "Light_R":
+    data.Lights.LightR = value
+    if (data.Lights.LightR == value) {
       return true
     }
     return false
@@ -152,26 +107,14 @@ func setLightStatus(w http.ResponseWriter, r *http.Request) {
     fmt.Println("Operation failed.")
     fmt.Fprint(w, "Error ", LightLabel, " to ", Value)
   }
-  writeDB()
+  go writeDB()
 }
 
-
-func getDoorStatus(w http.ResponseWriter, r *http.Request) {
-  val := data.Door
-  fmt.Println("Door Data requested : ", val)
-  w.Header().Set("Content-type", "application/json")
-  json.NewEncoder(w).Encode(val)
-}
-
-// Command = OPEN | CLOSE
-func openCloseDoor(w http.ResponseWriter, r *http.Request) {
+// Command = OPEN | STOP | CLOSE
+func setDoorStatus(w http.ResponseWriter, r *http.Request) {
   fmt.Println("Door Status Update.")
   Command := r.Header.Get("Command")
   if Command == "OPEN" {
-    if (data.DoorStop == 1) {
-      data.DoorStop = 0
-      fmt.Fprint(w, "Door Lock removed.")
-    }
     if data.Door != 1 {
       data.Door = 1
       fmt.Fprint(w, "Opening Door.")
@@ -179,41 +122,47 @@ func openCloseDoor(w http.ResponseWriter, r *http.Request) {
       fmt.Fprint(w, "Door Already Open.")
     }
   } else if Command == "CLOSE" {
-    if (data.DoorStop == 1) {
-      data.DoorStop = 0
-      fmt.Fprint(w, "Door Lock removed.")
-    }
-    if data.Door != 0 {
-      data.Door = 0
+    if data.Door != -1 {
+      data.Door = -1
       fmt.Fprint(w, "Closing Door.")
     } else {
       fmt.Fprint(w, "Door Already Closed.")
     }
+  } else if Command == "STOP" {
+    if data.Door != 0 {
+      data.Door = 0
+      fmt.Fprint(w, "Stopping Door.")
+    } else {
+      fmt.Fprint(w, "Door Already Stopped.")
+    }
   } else {
-    fmt.Fprint(w, "Unknown Command requested.")
+    fmt.Fprint(w, "Unknown command.")
   }
-  writeDB()
+  go writeDB()
 }
 
-func statDoor(w http.ResponseWriter, r *http.Request) {
-  val := data.DoorStop
-  fmt.Println("Door Data requested : ", val)
+// Get Door status
+func getDoorStatus(w http.ResponseWriter, r *http.Request) {
+  fmt.Println("Door Data requested : ", data.Door)
   w.Header().Set("Content-type", "application/json")
-  json.NewEncoder(w).Encode(val)
+  json.NewEncoder(w).Encode(data.Door)
 }
 
-// Status = LOCK | UNLOCK
-func stopDoor(w http.ResponseWriter, r *http.Request) {
-  fmt.Println("Locking Door Position.")
-  Status := r.Header.Get("Status")
-  if Status == "LOCK" {
-    data.DoorStop = 1
-    fmt.Fprint(w, "LOCK Command requested.")
-  } else if Status == "UNLOCK" {
-    data.DoorStop = 0
-    fmt.Fprint(w, "UNLOCK Command requested.")
-  }
-  writeDB()
+// Get Current stored Co sensor Value (int) 1 to 1000ppm 25 safe
+// sensor ESSINIE MICS-6814 Gas Sensor Module Air Quality Detection Sensor Carbon Monoxide CO Nitrogen Dioxide NO2 Ammonia NH3 Gas Detector Module for Arduino
+func getCoStatus(w http.ResponseWriter, r *http.Request) {
+  fmt.Println("Co Data requested : ", data.Co)
+  w.Header().Set("Content-type", "application/json")
+  json.NewEncoder(w).Encode(data.Co)
+}
+
+// Set the Co Sensor value [Value = int] 1 to 1000ppm 25 safe
+func setCoStatus(w http.ResponseWriter, r *http.Request) {
+  Value,_ := strconv.Atoi(r.Header.Get("Value"))
+  fmt.Println("CO Sensor Data Updating.", Value)
+  data.Co = Value
+  fmt.Fprint(w, "Sensor Value updated.")
+  go writeDB()
 }
 
 // Perform On every server start
@@ -230,6 +179,7 @@ func readDb() {
   defer jsonFile.Close()
 }
 
+// Perform on server sever dat change
 func writeDB() {
   file, _ := json.MarshalIndent(data, "", " ")
   _ = ioutil.WriteFile("db.json", file, 0644)
@@ -241,9 +191,9 @@ func handleRequests() {
   router.HandleFunc("/Lights", getLightStatus).Methods("GET")
   router.HandleFunc("/Lights", setLightStatus).Methods("PUT")
   router.HandleFunc("/Door", getDoorStatus).Methods("GET")
-  router.HandleFunc("/Door", openCloseDoor).Methods("PUT")
-  router.HandleFunc("/DoorStop", stopDoor).Methods("PUT")
-  router.HandleFunc("/DoorStat", statDoor).Methods("GET")
+  router.HandleFunc("/Door", setDoorStatus).Methods("PUT")
+  router.HandleFunc("/Co", getCoStatus).Methods("GET")
+  router.HandleFunc("/Co", setCoStatus).Methods("PUT")
 
   http.HandleFunc("/", defaultConnection)
   log.Fatal(http.ListenAndServe(":80", router))

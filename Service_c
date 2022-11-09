@@ -1,0 +1,5 @@
+systemctl daemon-reload
+systemctl stop ase_test.service
+systemctl enable ase_test.service
+systemctl start ase_test.service
+sudo setcap 'cap_net_bind_service=+ep' server
